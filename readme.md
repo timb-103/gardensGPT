@@ -1,6 +1,6 @@
 # [🌴 gardensGPT.com](https://gardensgpt.com)
 
-Create Workouts in Seconds with chatGPT
+Create a new garden for your backyard with AI.
 
 ## How it works
 
