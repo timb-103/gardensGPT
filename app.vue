@@ -64,8 +64,6 @@
   </div>
 </template>
 <script setup lang="ts">
-import { Upload } from 'upload-js'
-
 useHead({ title: 'GardensGPT - Create a new garden layout for your backyard with AI.' })
 
 const loading = ref(false)
@@ -73,9 +71,14 @@ const runtimeConfig = useRuntimeConfig()
 
 // add photo from input
 const photo = ref({ preview: '', uploadedUrl: '' })
-const upload = Upload({ apiKey: runtimeConfig.public.uploadPublicApiKey })
 const uploadProgress = ref(0)
 const uploading = ref(false)
+
+// initiate upload plugin
+let upload = {} as any
+onMounted(() => {
+  upload = window.Upload({ apiKey: runtimeConfig.public.uploadPublicApiKey })
+})
 
 const onFileSelected = async (event: any) => {
   const [file] = event.target.files

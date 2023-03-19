@@ -19,6 +19,7 @@ export default defineNuxtConfig({
       script: [
         // plausible
         { src: 'https://plausible.io/js/plausible.js', defer: true, 'data-domain': 'gardensgpt.com' },
+        { src: 'https://js.upload.io/upload-js/v2' },
       ],
       link: [
         {
