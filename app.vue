@@ -8,14 +8,14 @@
     <!-- Header -->
     <header class="center">
       <h1>Create a new garden for your backyard with AI.</h1>
-      <p>Just upload a photo of your existing garden or backyard and we'll give you a brand new garden layout!</p>
+      <p>Just upload a photo of your garden or backyard and we'll generate a brand new garden layout using AI.</p>
     </header>
 
     <!-- Generator -->
     <div class="generator">
       <!-- Upload  -->
       <div>
-        <label><strong>1. Upload a photo</strong></label>
+        <label><strong>1. Upload a photo of your garden</strong></label>
         <div class="upload-group">
           <input type="file" accept="image/png, image/jpeg" @change="onFileSelected" />
           <div class="upload-photo">
@@ -47,8 +47,8 @@
       <div class="made-by center">
         <p>
           Built by <a href="https://twitter.com/Timb03" target="_blank">Tim Bennetto</a> using
-          <a href="https://chat.openai.com/chat" target="_blank">chatGPT</a> and hosted on <a href="https://vercel.com" target="_blank">Vercel</a>'s
-          free plan.
+          <a href="https://replicate.com" target="_blank">Replicate</a>, <a href="https://upload.io" target="_blank">Upload.io</a> and hosted on
+          <a href="https://vercel.com" target="_blank">Vercel</a>'s free plan.
         </p>
         <div>
           <a href="https://github.com/timb-103/gardensGPT" target="_blank" aria-label="GitHub">

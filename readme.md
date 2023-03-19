@@ -1,4 +1,4 @@
-# [🌴 gardenssGPT.com](https://gardensgpt.com)
+# [🌴 gardensGPT.com](https://gardensgpt.com)
 
 Create Workouts in Seconds with chatGPT
 
