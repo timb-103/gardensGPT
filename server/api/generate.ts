@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
     const body = await readBody(event)
     const { photoURL, style } = body
 
-    console.log(`Starting image generation for ${photoURL}`)
+    console.log(`Starting ${style} image generation for ${photoURL}`)
 
     // create the prompt
     const url = 'https://api.replicate.com/v1/predictions'
@@ -57,24 +57,31 @@ function pickStyle(style: string) {
     case 'coastal':
       prompt =
         'drought-tolerant, water-wise, xeriscape, native plants, gravel, mulch, cactus, succulents, low-water usage, Mediterranean plants, ornamental grasses, rock gardens, desert-inspired, sustainable, wildlife-friendly, heat-tolerant, dry, sparse, earthy tones, natural materials, driftwood, low-maintenance, efficient irrigation, eco-friendly'
+      break
     case 'vegetable':
       prompt =
         'vegetable, garden, lush, green, rows, plants, soil, sunlight, colorful, variety, organic, fresh, growth, healthy, cultivated, outdoors'
+      break
     case 'flower':
       prompt =
         'flower, garden, blooming, vibrant, colors, petals, fragrant, greenery, lush, sunlight, variety, landscaped, peaceful, seasonal, pollinators, outdoors'
+      break
     case 'tropical':
       prompt =
-        'Green, lush, sculpted, hedges, intricate, shapes, geometrical, patterns, pathways, artistic, maintained, manicured, trimmed, symmetrical, focal points, creative, ornamental, plants, bushes, foliage, garden beds, landscape, outdoor, design, maze-like, serene, peaceful, trees, bushes, colorful, flowers, walkways, benches, lighting, shadows, variety, texture'
+        'green, lush, sculpted, hedges, intricate, shapes, geometrical, patterns, pathways, artistic, maintained, manicured, trimmed, symmetrical, focal points, creative, ornamental, plants, bushes, foliage, garden beds, landscape, outdoor, design, maze-like, serene, peaceful, trees, bushes, colorful, flowers, walkways, benches, lighting, shadows, variety, texture'
+      break
     case 'scandinavian':
       prompt =
         'scandinavian, garden, lush, green, minimalist, wooden, furniture, cozy, fireplace, perennials, wildflowers, herbs, vegetable, patch, stone, pathways, natural, materials, birdbath, lanterns, trellis, pergola, outdoor, textiles, blankets, cushions, serene, environment, water, feature, potted, plants, neutral, color, palette, functional, clean, lines, harmony, nature, sustainable, fencing, privacy, lighting, Nordic, design.'
+      break
     case 'modern':
       prompt =
         'modern, garden, lush, greenery, minimalist, hardscape, geometric, clean lines, water feature, outdoor seating, ambient lighting, raised planters, focal point, pergola, relaxation area, sustainable, drought-tolerant plants, stone pathways'
+      break
     case 'industrial':
       prompt =
         'industrial, garden, depth, AI, image, generator, urban, greenery, concrete, metal, structures, reclaimed, nature, modern, artwork, installations, benches, pathways, landscape, design, eco-friendly, adaptive, reuse, sustainable, materials, planters, lighting, grit, vibrant, vegetation, contrast, water, feature, mural, rust, brick, exposed, pipes'
+      break
     default:
       break
   }

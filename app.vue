@@ -60,6 +60,7 @@
           <img :src="gardenURL" class="non-upscaled-photo" />
           <img v-if="gardenURLUpscaled" :src="gardenURLUpscaled" class="upscaled-photo" />
         </div>
+        <button v-if="gardenURLUpscaled" class="button generate-button" data-type="primary" @click="download()">Download</button>
       </div>
 
       <!-- Made By -->
@@ -100,6 +101,7 @@ onMounted(() => {
   upload = window.Upload({ apiKey: runtimeConfig.public.uploadPublicApiKey })
 })
 
+// when a input photo is selected, upload it immediately
 const onFileSelected = async (event: any) => {
   const [file] = event.target.files
 
@@ -112,6 +114,11 @@ const onFileSelected = async (event: any) => {
   photo.value.uploadedURL = ''
   error.value = false
 
+  // function to update the progress bar
+  const onProgress = (progress: any) => {
+    uploadProgress.value = progress.progress
+  }
+
   uploading.value = true
   photo.value.preview = URL.createObjectURL(file)
   const { fileUrl } = await upload.uploadFile(file, { onProgress })
@@ -119,23 +126,19 @@ const onFileSelected = async (event: any) => {
   uploading.value = false
 }
 
-const onProgress = (progress: any) => {
-  uploadProgress.value = progress.progress
-}
-
 // style
 const styles = ref(['scandinavian', 'vegetable', 'flower', 'japanese', 'tropical', 'contemporary minimal', 'modern', 'coastal', 'industrial'])
-const styleSelected = ref('japanese')
+const styleSelected = ref('tropical')
 
-// generate garden
+// garden
 const gardenURL = ref('')
 const gardenURLUpscaled = ref('')
+
+// generate garden from replicate
 async function generate() {
-  // start loading, clear error
+  // start loading, reset values
   loading.value = true
   error.value = false
-
-  // clear existing garden
   gardenURL.value = ''
   gardenURLUpscaled.value = ''
 
@@ -205,6 +208,21 @@ async function checkPrediction(id: string) {
 
   return output
 }
+
+function download() {
+  fetch(gardenURLUpscaled.value, { headers: new Headers({ Origin: location.origin }), mode: 'cors' })
+    .then((response) => response.blob())
+    .then((blob) => {
+      let blobUrl = window.URL.createObjectURL(blob)
+      let a: any = document.createElement('a')
+      a.download = 'garden.jpg'
+      a.href = blobUrl
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+    })
+    .catch((e) => console.error(e))
+}
 </script>
 <style scoped>
 /* Header */
@@ -272,6 +290,9 @@ header {
 .garden > img {
   max-width: 100%;
   display: block;
+}
+.garden + button {
+  margin-top: 2em;
 }
 
 /** Upscaling */
