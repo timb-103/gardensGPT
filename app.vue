@@ -29,17 +29,36 @@
         </div>
       </div>
 
+      <!-- Location  -->
+      <div>
+        <label><strong>2. Pick a style</strong></label>
+        <div class="options">
+          <select v-model="styleSelected">
+            <option v-for="(item, index) in styles" :key="index" :value="item" :selected="item === styleSelected">{{ item }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div v-if="error" class="error">
+        <p>Error generating photo, please try again.</p>
+      </div>
+
       <!-- Generate Button -->
       <div>
-        <button class="button generate-button" data-type="primary" @click="generate()" :disabled="uploading || loading || !photo.uploadedUrl">
-          <span v-if="!loading">Generate Garden</span><span v-else>Loading...</span>
+        <button class="button generate-button" data-type="primary" @click="generate()" :disabled="uploading || loading || !photo.uploadedURL">
+          <span v-if="!loading">Generate Garden (~30 seconds)</span><span v-else>Loading...</span>
         </button>
       </div>
 
       <!-- Garden -->
       <div>
         <div v-if="gardenURL" class="garden">
-          <img :src="gardenURL" />
+          <div v-if="!gardenURLUpscaled" class="upscaling">
+            <p>Upscaling photo...</p>
+          </div>
+          <img :src="gardenURL" class="non-upscaled-photo" />
+          <img v-if="gardenURLUpscaled" :src="gardenURLUpscaled" class="upscaled-photo" />
         </div>
       </div>
 
@@ -67,10 +86,11 @@
 useHead({ title: 'GardensGPT - Create a new garden layout for your backyard with AI.' })
 
 const loading = ref(false)
+const error = ref(false)
 const runtimeConfig = useRuntimeConfig()
 
 // add photo from input
-const photo = ref({ preview: '', uploadedUrl: '' })
+const photo = ref({ preview: '', uploadedURL: '', upscaledURL: '' })
 const uploadProgress = ref(0)
 const uploading = ref(false)
 
@@ -89,12 +109,13 @@ const onFileSelected = async (event: any) => {
 
   // clear old photo
   photo.value.preview = ''
-  photo.value.uploadedUrl = ''
+  photo.value.uploadedURL = ''
+  error.value = false
 
   uploading.value = true
   photo.value.preview = URL.createObjectURL(file)
   const { fileUrl } = await upload.uploadFile(file, { onProgress })
-  photo.value.uploadedUrl = fileUrl
+  photo.value.uploadedURL = fileUrl
   uploading.value = false
 }
 
@@ -102,14 +123,21 @@ const onProgress = (progress: any) => {
   uploadProgress.value = progress.progress
 }
 
+// style
+const styles = ref(['scandinavian', 'vegetable', 'flower', 'japanese', 'tropical', 'contemporary minimal', 'modern', 'coastal', 'industrial'])
+const styleSelected = ref('japanese')
+
 // generate garden
 const gardenURL = ref('')
+const gardenURLUpscaled = ref('')
 async function generate() {
-  // start loading
+  // start loading, clear error
   loading.value = true
+  error.value = false
 
   // clear existing garden
   gardenURL.value = ''
+  gardenURLUpscaled.value = ''
 
   try {
     // add plausible event
@@ -118,19 +146,64 @@ async function generate() {
     }
 
     // generate the garden
-    const data = await $fetch('/api/generate', {
+    const { data: id } = (await useFetch('/api/generate', {
       method: 'post',
-      body: { photoURL: photo.value.uploadedUrl },
-    })
+      body: { photoURL: photo.value.uploadedURL, style: styleSelected.value },
+    })) as any
 
-    // set the results
-    gardenURL.value = data
+    if (!id.value) {
+      error.value = true
+      loading.value = false
+      return
+    }
+
+    // check result of the image generation every 1 second
+    const generationResult = await checkPrediction(id.value)
+    gardenURL.value = generationResult[1]
+
+    // upscale the result
+    const { data: upscaledId } = (await useFetch('/api/upscale', { method: 'post', body: { photoURL: gardenURL.value } })) as any
+
+    // check result of the image uplscale every 1 second
+    if (upscaledId) {
+      gardenURLUpscaled.value = await checkPrediction(upscaledId.value)
+    }
   } catch (e) {
     console.log('Error generating garden:', e)
   }
 
   // end loading
   loading.value = false
+}
+
+async function checkPrediction(id: string) {
+  let count = 0
+  let output = []
+
+  try {
+    // check for result every 1s
+    while (!output.length && count < 100) {
+      // inc counter so it doesn't poll forever
+      count += 1
+
+      // get prediction
+      let result = (await $fetch('/api/getPrediction', { method: 'post', body: { id } })) as any
+
+      // set the results or try again in 1 second
+      if (result.status === 'succeeded') {
+        output = result.output
+      } else if (result.status === 'failed') {
+        error.value = true
+        break
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+      }
+    }
+  } catch (e) {
+    console.log('Error checking prediction:', e)
+  }
+
+  return output
 }
 </script>
 <style scoped>
@@ -194,10 +267,74 @@ header {
 /* Garden */
 .garden {
   margin-top: 1em;
+  position: relative;
 }
 .garden > img {
   max-width: 100%;
   display: block;
+}
+
+/** Upscaling */
+.upscaling {
+  height: 100%;
+  z-index: 2;
+  position: absolute;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.upscaling > p {
+  background: rgba(255, 255, 255, 0.5);
+  font-weight: 600;
+  border-radius: 40px;
+  padding: 0 10px;
+}
+.upscaled-photo {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.non-upscaled-photo {
+}
+
+/* Options */
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.option {
+  border: 1px solid var(--grey);
+  border-radius: 6px;
+  background: #fff;
+  padding: 0.7em 1.4em;
+  position: relative;
+}
+.option:hover {
+  background: #fafafa;
+  cursor: pointer;
+}
+.option-selected {
+  border-color: var(--black);
+}
+.option-check {
+  display: none;
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #fff;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--black);
+  font-size: 11px;
+}
+.option-selected > .option-check {
+  display: flex;
 }
 
 /* Made By */
